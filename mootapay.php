@@ -1,6 +1,8 @@
 <?php
 
-if (!defined('_PS_VERSION_')) exit;
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 class MootaPay extends PaymentModule
 {
@@ -16,7 +18,7 @@ class MootaPay extends PaymentModule
     {
         $this->name = self::MOOTA_MODULE;
         $this->tab = 'payments_gateways';
-        $this->version = '1.0';
+        $this->version = '1.0.0';
         $this->author = 'Moota';
         $this->bootstrap = true;
 
