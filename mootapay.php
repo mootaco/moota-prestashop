@@ -218,7 +218,7 @@ class MootaPay extends PaymentModule
         array_pop($paths);
         $paths = implode('/', $paths);
         $baseUri = $_SERVER['SERVER_NAME'] . realpath(
-            dirname( $_SERVER['DOCUMENT_URI'] ) . '/..'
+            dirname( $_SERVER['REQUEST_URI'] ) . '/..'
         ) . $paths;
         unset($paths);
 
@@ -233,8 +233,7 @@ class MootaPay extends PaymentModule
             MOOTA_SDK_SERVER_ADDRESS => $config[
                 MOOTA_SDK_SERVER_ADDRESS
             ],
-            'PUSH_NOTIF_URL' => $baseUri . '/index.php?fc=module'
-                . '&module=mootapay&controller=notification',
+            'PUSH_NOTIF_URL' => $baseUri . '/modules/mootapay/notification.php',
         ];
 
         return $helper->generateForm($fields_form);

@@ -1,0 +1,25 @@
+{
+    "name": "mootaco/moota-prestashop",
+    "description": "Moota Payment Gateway plugin for prestashop",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Aprilus Lumbantoruan",
+            "email": "i@pilus.me"
+        }
+    ],
+    "minimum-stability": "stable",
+    "config": {
+        "vendor-dir": "library/"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/mootaco/php-sdk.git"
+        }
+    ],
+    "require": {
+        "moota/moota-sdk": "~1.0"
+    }
+}

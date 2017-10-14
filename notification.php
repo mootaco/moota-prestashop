@@ -4,9 +4,9 @@ $rootDir = str_replace(
     'modules/mootapay', '', dirname($_SERVER['SCRIPT_FILENAME'])
 );
 
-include_once $rootDir . '/config/config.inc.php';
-include_once __DIR__ . '/library/moota-sdk/bootstrap.php';
-include_once __DIR__ . '/mootapay.php';
+require_once $rootDir . '/config/config.inc.php';
+require_once __DIR__ . '/library/autoload.php';
+require_once __DIR__ . '/mootapay.php';
 
 const AWAITING_CHECK_PAYMENT = 1;
 const AWAITING_BANK_WIRE_PAYMENT = 10;
@@ -30,11 +30,8 @@ if (strtolower($_SERVER['REQUEST_METHOD']) !== 'post') {
         'sdkMode' => strtolower( $config['sdkMode'] ),
         'serverAddress' => $config['serverAddress'],
     ]);
-
-    header('Content-Type: application/json');
-    echo json_encode($orders, true);
     
-    $transactions = PushCallbackHandler::createDefault()->decode();
+    $transactions = Moota\SDK\PushCallbackHandler::createDefault()->decode();
 
     // only CR
     foreach ($transactions as $trans) {
@@ -58,59 +55,6 @@ if (strtolower($_SERVER['REQUEST_METHOD']) !== 'post') {
 
     $orders = Db::getInstance()->executeS($query);
 
-    if (! empty($orders) && count($orders) > 0) {
-        // match prestashop orders with moota transactions
-        foreach ($orders as $order) {
-            $transAmount = (int) str_replace('.00', '', $order->total . '');
-            $tmpPayment = null;
-        
-            foreach ($mootaInflows as $mootaInflow) {
-                if ($mootaInflow['amount'] === $transAmount) {
-                    $tmpPayment = $mootaInflow;
-                    break;
-                }
-            }
-
-            $payments[]  = [
-                // transactionId:
-                //   { invoiceId }-{ moota:id }-{ moota:account_number }
-                'transactionId' => implode('-', [
-                    $order->id, $tmpPayment['id'], $tmpPayment['account_number']
-                ]),
-                'invoiceId' => $order->id,
-                'mootaId' => $tmpPayment['id'],
-                'mootaAccNo' => $tmpPayment['account_number'],
-                'amount' => $tmpPayment['amount'],
-                'mootaAmount' => $tmpPayment['amount'],
-                'invoiceAmount' => $order->total,
-            ];
-        }
-
-        $pushReplyData['data'] = [
-            'dataCount' => count($transactions),
-            'inflowCount' => count($mootaInflows),
-            'payments' => $payments,
-        ];
-
-        if ( count($payments) > 0 ) {
-            // finally add payment and log to gateway logs
-            foreach ($payments as $payment) {
-                // addInvoicePayment
-
-                // logTransaction
-            }
-
-            $pushReplyData['status'] = 'ok';
-        } else {
-            $pushReplyData['status'] = 'not-ok';
-            $pushReplyData['status'] = 'No unpaid orders matches current push data';
-        }
-    } else {
-        $pushReplyData['status'] = 'not-ok';
-        $pushReplyData['error'] = 'No unpaid orders found';
-    }
-
     header('Content-Type: application/json');
-
-    die( json_encode( $pushReplyData ) );
+    die( json_encode( $orders, true ) );
 }

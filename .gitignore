@@ -1,1 +1,4 @@
 config.xml
+
+/vendor/
+/library/
