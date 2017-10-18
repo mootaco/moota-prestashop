@@ -4,19 +4,12 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-const MOOTA_SDK_SETTINGS = 'MOOTA_SDK_SETTINGS';
-const MOOTA_MODULE = 'mootapay';
-
-const MOOTA_SDK_API_KEY = 'apiKey';
-const MOOTA_SDK_API_TIMEOUT = 'apiTimeout';
-const MOOTA_SDK_ENV = 'sdkMode';
-const MOOTA_SDK_SERVER_ADDRESS = 'serverAddress';
-
 class MootaPay extends PaymentModule
 {
     public function __construct()
     {
-        $this->name = MOOTA_MODULE;
+        // all MOOTA_* constants is in the SDK
+        $this->name = 'mootapay';
         $this->tab = 'payments_gateways';
         $this->version = '1.0.0';
         $this->author = 'Moota';
@@ -37,18 +30,12 @@ class MootaPay extends PaymentModule
 
     public function install()
     {
-        if (! Configuration::get(MOOTA_SDK_SETTINGS)) {
-            Configuration::updateValue(
-                MOOTA_SDK_SETTINGS,
-                serialize(
-                    [
-                        'apiKey' => null,
-                        'apiTimeout' => 30,
-                        'sdkMode' => 'production',
-                        'serverAddress' => 'app.moota.co',
-                    ]
-                )
-            );
+        if ( ! Configuration::get( MOOTA_SETTINGS ) ) {
+            Configuration::updateValue(MOOTA_SETTINGS, serialize([
+                'apiKey' => null,
+                'apiTimeout' => 30,
+                'sdkMode' => 'production',
+            ]));
         }
 
         parent::install();
@@ -58,7 +45,7 @@ class MootaPay extends PaymentModule
 
     public function uninstall()
     {
-        Configuration::deleteByName(MOOTA_SDK_SETTINGS);
+        Configuration::deleteByName(MOOTA_SETTINGS);
         parent::uninstall();
 
         return true;
@@ -70,22 +57,17 @@ class MootaPay extends PaymentModule
      
         if (Tools::isSubmit('submit' . $this->name)) {
             $configValues = [
-                MOOTA_SDK_API_KEY => strval(
-                    Tools::getValue( MOOTA_SDK_API_KEY )
+                MOOTA_API_KEY => strval(
+                    Tools::getValue( MOOTA_API_KEY )
                 ),
-                MOOTA_SDK_API_TIMEOUT => strval(
-                    Tools::getValue( MOOTA_SDK_API_TIMEOUT )
+                MOOTA_API_TIMEOUT => strval(
+                    Tools::getValue( MOOTA_API_TIMEOUT )
                 ),
-                MOOTA_SDK_ENV => strval(
-                    Tools::getValue( MOOTA_SDK_ENV )
-                ),
-                MOOTA_SDK_SERVER_ADDRESS => strval(
-                    Tools::getValue( MOOTA_SDK_SERVER_ADDRESS )
-                ),
+                MOOTA_ENV => strval( Tools::getValue( MOOTA_ENV ) )
             ];
 
             Configuration::updateValue(
-                MOOTA_SDK_SETTINGS, serialize($configValues)
+                MOOTA_SETTINGS, serialize($configValues)
             );
 
             $output .= $this->displayConfirmation(
@@ -102,30 +84,35 @@ class MootaPay extends PaymentModule
         $default_lang = (int) Configuration::get('PS_LANG_DEFAULT');
 
         // Init Fields form array
-        $fields_form[0]['form'] = [
-            'legend' => [
+        $fields_form[0]['form'] = array(
+            'legend' => array(
                 'title' => $this->l('Settings'),
-            ],
-            'input' => [
-                [
+            ),
+            'input' => array(
+                array(
                     'type' => 'text',
                     'label' => 'API Key',
-                    'name' => MOOTA_SDK_API_KEY,
+                    'desc' => $this->l('Dapatkan API Key melalui: ')
+                        . '<a href="https://app.moota.co/settings?tab=api" '
+                        . 'target="_new">https://app.moota.co/settings?'
+                        . 'tab=api</a>'
+                    ,
+                    'name' => MOOTA_API_KEY,
                     'size' => 20,
                     'required' => true
-                ],
-                [
+                ),
+                array(
                     'type' => 'text',
                     'label' => 'API Timeout',
-                    'name' => MOOTA_SDK_API_TIMEOUT,
+                    'name' => MOOTA_API_TIMEOUT,
                     'size' => 20,
                     'required' => true
-                ],
-                [
+                ),
+                array(
                     'type' => 'radio',
                     'label' => $this->l('Environment'),
                     'desc' => $this->l('Only change when asked by Moota'),
-                    'name' => MOOTA_SDK_ENV,
+                    'name' => MOOTA_ENV,
                     'size' => 20,
 
                     // If set to true, this option must be set.
@@ -135,26 +122,19 @@ class MootaPay extends PaymentModule
                     // for the <input> tag.
                     'class'     => 'col-xs-2',
                     'is_bool'   => false, 
-                    'values' => [
-                        [
-                            'id' => MOOTA_SDK_ENV . '_production',
+                    'values' => array(
+                        array(
+                            'id' => MOOTA_ENV . '_production',
                             'value' => 'production',
                             'label' => 'Production',
-                        ], [
-                            'id' => MOOTA_SDK_ENV . '_testing',
+                        ), array(
+                            'id' => MOOTA_ENV . '_testing',
                             'value' => 'testing',
                             'label' => 'Testing',
-                        ]
-                    ]
-                ],
-                [
-                    'type' => 'text',
-                    'label' => $this->l('Server Address'),
-                    'name' => MOOTA_SDK_SERVER_ADDRESS,
-                    'size' => 20,
-                    'required' => true
-                ],
-                [
+                        )
+                    )
+                ),
+                array(
                     'type' => 'text',
                     'label' => $this->l(
                         'Moota Push Notification URL (readonly)'
@@ -167,13 +147,13 @@ class MootaPay extends PaymentModule
                     ),
                     'size' => 20,
                     'readonly' => true,
-                ],
-            ],
-            'submit' => [
+                ),
+            ),
+            'submit' => array(
                 'title' => $this->l('Save'),
                 'class' => 'btn btn-default pull-right'
-            ]
-        ];
+            )
+        );
 
         $helper = new HelperForm();
 
@@ -223,18 +203,15 @@ class MootaPay extends PaymentModule
         unset($paths);
 
         // Load current value
-        $config = unserialize(Configuration::get(MOOTA_SDK_SETTINGS));
-        $helper->fields_value = [
-            MOOTA_SDK_API_KEY => $config[ MOOTA_SDK_API_KEY ],
-            MOOTA_SDK_API_TIMEOUT => $config[
-                MOOTA_SDK_API_TIMEOUT
+        $config = unserialize( Configuration::get( MOOTA_SETTINGS ) );
+        $helper->fields_value = array(
+            MOOTA_API_KEY => $config[ MOOTA_API_KEY ],
+            MOOTA_API_TIMEOUT => $config[
+                MOOTA_API_TIMEOUT
             ],
-            MOOTA_SDK_ENV => $config[ MOOTA_SDK_ENV ],
-            MOOTA_SDK_SERVER_ADDRESS => $config[
-                MOOTA_SDK_SERVER_ADDRESS
-            ],
+            MOOTA_ENV => $config[ MOOTA_ENV ],
             'PUSH_NOTIF_URL' => $baseUri . '/modules/mootapay/notification.php',
-        ];
+        );
 
         return $helper->generateForm($fields_form);
     }

@@ -20,6 +20,6 @@
         }
     ],
     "require": {
-        "moota/moota-sdk": "~1.0"
+        "moota/moota-sdk": "dev-master"
     }
 }
