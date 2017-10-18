@@ -22,82 +22,94 @@ if (strtolower($_SERVER['REQUEST_METHOD']) !== 'post') {
     http_response_code(405);
     echo 'Only POST is allowed';
 } else {
-    $config = unserialize(Configuration::get(MOOTA_SDK_SETTINGS));
+    $config = unserialize(Configuration::get(MOOTA_SETTINGS));
 
     Moota\SDK\Config::fromArray(array(
-        MOOTA_SDK_API_KEY => $config[ MOOTA_SDK_API_KEY ],
-        MOOTA_SDK_API_TIMEOUT => $config[ MOOTA_SDK_API_TIMEOUT ],
-        MOOTA_SDK_ENV => strtolower( $config[ MOOTA_SDK_ENV ] ),
+        MOOTA_API_KEY => $config[ MOOTA_API_KEY ],
+        MOOTA_API_TIMEOUT => $config[ MOOTA_API_TIMEOUT ],
+        MOOTA_ENV => strtolower( $config[ MOOTA_ENV ] ),
     ));
 
-    $mootaInflows = Moota\SDK\PushCallbackHandler::decodeInflows();
+    var_dump([
+        '$apiKey' => Moota\SDK\Config::$apiKey,
+        '$apiTimeout' => Moota\SDK\Config::$apiTimeout,
+        '$sdkMode' => Moota\SDK\Config::$sdkMode,
+        '$serverAddress' => Moota\SDK\Config::$serverAddress,
+        '$useUniqueCode' => Moota\SDK\Config::$useUniqueCode,
+        '$uqCodePreffix' => Moota\SDK\Config::$uqCodePreffix,
+        '$uqCodeSuffix' => Moota\SDK\Config::$uqCodeSuffix,
+    ]);exit;
 
-    $query = (new DbQuery)
-        ->select(
-            '`id_order`, `current_state`, `total_paid_real`, `date_upd`'
-            . ', `reference`'
-        )
-        ->from('orders')
-        ->where(
-            '`current_state` IN ('. implode(',', $unfinishedStates) . ')'
-        )
-        ->where('`total_paid_real` < 1')
-    ;
+    // $mootaInflows = Moota\SDK\PushCallbackHandler::decodeInflows();
 
-    $orders = Db::getInstance()->executeS($query);
+    // $query = (new DbQuery)
+    //     ->select(
+    //         '`id_order`, `current_state`, `total_paid_real`, `date_upd`'
+    //         . ', `reference`'
+    //     )
+    //     ->from('orders')
+    //     ->where(
+    //         '`current_state` IN ('. implode(',', $unfinishedStates) . ')'
+    //     )
+    //     ->where('`total_paid_real` < 1')
+    // ;
+
+    // $orders = Db::getInstance()->executeS($query);
+
+    // die(json_encode($orders));
     
-    if ( ! empty($invoices) && count($invoices) > 0 ) {
-        // match whmcs invoice with moota transactions
-        // apply unique code transformation over here
-        foreach ($invoices as $invoice) {
-            $transAmount = (int) str_replace('.00', '', $invoice->total . '');
-            $tmpPayment = null;
+    // if ( ! empty($invoices) && count($invoices) > 0 ) {
+    //     // match whmcs invoice with moota transactions
+    //     // apply unique code transformation over here
+    //     foreach ($invoices as $invoice) {
+    //         $transAmount = (int) str_replace('.00', '', $invoice->total . '');
+    //         $tmpPayment = null;
     
-            foreach ($mootaInflows as $mootaInflow) {
-                if ($mootaInflow['amount'] === $transAmount) {
-                    $tmpPayment = $mootaInflow;
-                    break;
-                }
-            }
+    //         foreach ($mootaInflows as $mootaInflow) {
+    //             if ($mootaInflow['amount'] === $transAmount) {
+    //                 $tmpPayment = $mootaInflow;
+    //                 break;
+    //             }
+    //         }
     
-            $payments[]  = [
-                // transactionId:
-                //   { invoiceId }-{ moota:id }-{ moota:account_number }
-                'transactionId' => implode('-', [
-                    $invoice->id, $tmpPayment['id'], $tmpPayment['account_number']
-                ]),
-                'invoiceId' => $invoice->id,
-                'mootaId' => $tmpPayment['id'],
-                'mootaAccNo' => $tmpPayment['account_number'],
-                'amount' => $tmpPayment['amount'],
-                'mootaAmount' => $tmpPayment['amount'],
-                'invoiceAmount' => $invoice->total,
-            ];
-        }
+    //         $payments[]  = [
+    //             // transactionId:
+    //             //   { invoiceId }-{ moota:id }-{ moota:account_number }
+    //             'transactionId' => implode('-', [
+    //                 $invoice->id, $tmpPayment['id'], $tmpPayment['account_number']
+    //             ]),
+    //             'invoiceId' => $invoice->id,
+    //             'mootaId' => $tmpPayment['id'],
+    //             'mootaAccNo' => $tmpPayment['account_number'],
+    //             'amount' => $tmpPayment['amount'],
+    //             'mootaAmount' => $tmpPayment['amount'],
+    //             'invoiceAmount' => $invoice->total,
+    //         ];
+    //     }
     
-        $pushReplyData['data'] = [
-            'dataCount' => count($transactions),
-            'inflowCount' => count($mootaInflows),
-            'payments' => $payments,
-        ];
+    //     $pushReplyData['data'] = [
+    //         'dataCount' => count($transactions),
+    //         'inflowCount' => count($mootaInflows),
+    //         'payments' => $payments,
+    //     ];
     
-        if ( count($payments) > 0 ) {
-            // finally add payment and log to gateway logs
-            foreach ($payments as $payment) {
-            }
+    //     if ( count($payments) > 0 ) {
+    //         // finally add payment and log to gateway logs
+    //         foreach ($payments as $payment) {
+    //         }
     
-            $pushReplyData['status'] = 'ok';
-        } else {
-            $pushReplyData['status'] = 'not-ok';
-            $pushReplyData['status'] = 'No unpaid invoice matches current push'
-                . ' data';
-        }
-    } else {
-        $pushReplyData['status'] = 'not-ok';
-        $pushReplyData['error'] = 'No unpaid invoice found';
-    }
+    //         $pushReplyData['status'] = 'ok';
+    //     } else {
+    //         $pushReplyData['status'] = 'not-ok';
+    //         $pushReplyData['status'] = 'No unpaid invoice matches current push'
+    //             . ' data';
+    //     }
+    // } else {
+    //     $pushReplyData['status'] = 'not-ok';
+    //     $pushReplyData['error'] = 'No unpaid invoice found';
+    // }
     
-    header('Content-Type: application/json');
+    // header('Content-Type: application/json');
     
-    die( json_encode( $pushReplyData ) );
+    // die( json_encode( $pushReplyData ) );
 }

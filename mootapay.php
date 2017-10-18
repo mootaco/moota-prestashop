@@ -4,6 +4,8 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+require_once __DIR__ . '/library/moota/moota-sdk/constants.php';
+
 class MootaPay extends PaymentModule
 {
     public function __construct()
@@ -32,9 +34,10 @@ class MootaPay extends PaymentModule
     {
         if ( ! Configuration::get( MOOTA_SETTINGS ) ) {
             Configuration::updateValue(MOOTA_SETTINGS, serialize([
-                'apiKey' => null,
-                'apiTimeout' => 30,
-                'sdkMode' => 'production',
+                MOOTA_API_KEY => null,
+                MOOTA_API_TIMEOUT => 30,
+                MOOTA_ENV => 'production',
+                MOOTA_USE_UQ_CODE => false,
             ]));
         }
 
@@ -135,9 +138,32 @@ class MootaPay extends PaymentModule
                     )
                 ),
                 array(
+                    'type' => 'radio',
+                    'label' => $this->l('Gunakan kode unik?'),
+                    'name' => MOOTA_USE_UQ_CODE,
+                    'size' => 20,
+                    'required' => true,
+                    
+                    // The content of the 'class' attribute of the <label> tag
+                    // for the <input> tag.
+                    'class'     => 'col-xs-2',
+                    'is_bool'   => true, 
+                    'values' => array(
+                        array(
+                            'id' => MOOTA_USE_UQ_CODE . '_yes',
+                            'value' => 1,
+                            'label' => 'Ya',
+                        ), array(
+                            'id' => MOOTA_USE_UQ_CODE . '_no',
+                            'value' => 0,
+                            'label' => 'Tidak',
+                        )
+                    )
+                ),
+                array(
                     'type' => 'text',
                     'label' => $this->l(
-                        'Moota Push Notification URL (readonly)'
+                        'Moota Push Notification URL (display-only)'
                     ),
                     'name' => 'PUSH_NOTIF_URL',
                     'desc' => $this->l(
@@ -210,6 +236,7 @@ class MootaPay extends PaymentModule
                 MOOTA_API_TIMEOUT
             ],
             MOOTA_ENV => $config[ MOOTA_ENV ],
+            MOOTA_USE_UQ_CODE => $config[ MOOTA_USE_UQ_CODE ],
             'PUSH_NOTIF_URL' => $baseUri . '/modules/mootapay/notification.php',
         );
 
