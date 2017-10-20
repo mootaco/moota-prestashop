@@ -1,5 +1,7 @@
 <?php
 
+header('Content-Type: application/json');
+
 $rootDir = str_replace(
     'modules/mootapay', '', dirname($_SERVER['SCRIPT_FILENAME'])
 );
@@ -30,86 +32,90 @@ if (strtolower($_SERVER['REQUEST_METHOD']) !== 'post') {
         MOOTA_ENV => strtolower( $config[ MOOTA_ENV ] ),
     ));
 
-    var_dump([
-        '$apiKey' => Moota\SDK\Config::$apiKey,
-        '$apiTimeout' => Moota\SDK\Config::$apiTimeout,
-        '$sdkMode' => Moota\SDK\Config::$sdkMode,
-        '$serverAddress' => Moota\SDK\Config::$serverAddress,
-        '$useUniqueCode' => Moota\SDK\Config::$useUniqueCode,
-        '$uqCodePreffix' => Moota\SDK\Config::$uqCodePreffix,
-        '$uqCodeSuffix' => Moota\SDK\Config::$uqCodeSuffix,
-    ]);exit;
+    $inflowAmounts = null;
+    $error = null;
+    $mootaInflows = Moota\SDK\PushCallbackHandler::decodeInflows(
+        $inflowAmounts, $error
+    );
 
-    // $mootaInflows = Moota\SDK\PushCallbackHandler::decodeInflows();
+    if (!empty($error)) {
+        http_response_code(401);
 
-    // $query = (new DbQuery)
-    //     ->select(
-    //         '`id_order`, `current_state`, `total_paid_real`, `date_upd`'
-    //         . ', `reference`'
-    //     )
-    //     ->from('orders')
-    //     ->where(
-    //         '`current_state` IN ('. implode(',', $unfinishedStates) . ')'
-    //     )
-    //     ->where('`total_paid_real` < 1')
-    // ;
-
-    // $orders = Db::getInstance()->executeS($query);
-
-    // die(json_encode($orders));
+        echo json_encode( array(
+            'status' => 'error',
+            'code' => '401',
+            'error' => $error
+        ) );
+    } else {
+        $query = (new DbQuery)
+            ->select(
+                '`id_order`, `current_state`, `total_paid`'
+                . ', `total_paid_real`, `date_upd`, `reference`'
+            )
+            ->from('orders')
+            ->where(
+                '`current_state` IN ('. implode(',', $unfinishedStates) . ')'
+            )
+            ->where('`total_paid_real` < 1')
+        ;
     
-    // if ( ! empty($invoices) && count($invoices) > 0 ) {
-    //     // match whmcs invoice with moota transactions
-    //     // apply unique code transformation over here
-    //     foreach ($invoices as $invoice) {
-    //         $transAmount = (int) str_replace('.00', '', $invoice->total . '');
-    //         $tmpPayment = null;
+        $orders = Db::getInstance()->executeS($query);
     
-    //         foreach ($mootaInflows as $mootaInflow) {
-    //             if ($mootaInflow['amount'] === $transAmount) {
-    //                 $tmpPayment = $mootaInflow;
-    //                 break;
-    //             }
-    //         }
-    
-    //         $payments[]  = [
-    //             // transactionId:
-    //             //   { invoiceId }-{ moota:id }-{ moota:account_number }
-    //             'transactionId' => implode('-', [
-    //                 $invoice->id, $tmpPayment['id'], $tmpPayment['account_number']
-    //             ]),
-    //             'invoiceId' => $invoice->id,
-    //             'mootaId' => $tmpPayment['id'],
-    //             'mootaAccNo' => $tmpPayment['account_number'],
-    //             'amount' => $tmpPayment['amount'],
-    //             'mootaAmount' => $tmpPayment['amount'],
-    //             'invoiceAmount' => $invoice->total,
-    //         ];
-    //     }
-    
-    //     $pushReplyData['data'] = [
-    //         'dataCount' => count($transactions),
-    //         'inflowCount' => count($mootaInflows),
-    //         'payments' => $payments,
-    //     ];
-    
-    //     if ( count($payments) > 0 ) {
-    //         // finally add payment and log to gateway logs
-    //         foreach ($payments as $payment) {
-    //         }
-    
-    //         $pushReplyData['status'] = 'ok';
-    //     } else {
-    //         $pushReplyData['status'] = 'not-ok';
-    //         $pushReplyData['status'] = 'No unpaid invoice matches current push'
-    //             . ' data';
-    //     }
-    // } else {
-    //     $pushReplyData['status'] = 'not-ok';
-    //     $pushReplyData['error'] = 'No unpaid invoice found';
-    // }
-    
-    // header('Content-Type: application/json');
-    
-    // die( json_encode( $pushReplyData ) );
+        echo json_encode($orders);
+        
+        // if ( ! empty($invoices) && count($invoices) > 0 ) {
+        //     // match whmcs invoice with moota transactions
+        //     // apply unique code transformation over here
+        //     foreach ($invoices as $invoice) {
+        //         $transAmount = (int) str_replace('.00', '', $invoice->total . '');
+        //         $tmpPayment = null;
+        
+        //         foreach ($mootaInflows as $mootaInflow) {
+        //             if ($mootaInflow['amount'] === $transAmount) {
+        //                 $tmpPayment = $mootaInflow;
+        //                 break;
+        //             }
+        //         }
+        
+        //         $payments[]  = [
+        //             // transactionId:
+        //             //   { invoiceId }-{ moota:id }-{ moota:account_number }
+        //             'transactionId' => implode('-', [
+        //                 $invoice->id, $tmpPayment['id'], $tmpPayment['account_number']
+        //             ]),
+        //             'invoiceId' => $invoice->id,
+        //             'mootaId' => $tmpPayment['id'],
+        //             'mootaAccNo' => $tmpPayment['account_number'],
+        //             'amount' => $tmpPayment['amount'],
+        //             'mootaAmount' => $tmpPayment['amount'],
+        //             'invoiceAmount' => $invoice->total,
+        //         ];
+        //     }
+        
+        //     $pushReplyData['data'] = [
+        //         'dataCount' => count($transactions),
+        //         'inflowCount' => count($mootaInflows),
+        //         'payments' => $payments,
+        //     ];
+        
+        //     if ( count($payments) > 0 ) {
+        //         // finally add payment and log to gateway logs
+        //         foreach ($payments as $payment) {
+        //         }
+        
+        //         $pushReplyData['status'] = 'ok';
+        //     } else {
+        //         $pushReplyData['status'] = 'not-ok';
+        //         $pushReplyData['status'] = 'No unpaid invoice matches current push'
+        //             . ' data';
+        //     }
+        // } else {
+        //     $pushReplyData['status'] = 'not-ok';
+        //     $pushReplyData['error'] = 'No unpaid invoice found';
+        // }
+        
+        // header('Content-Type: application/json');
+        
+        // die( json_encode( $pushReplyData ) );
+    }
 }

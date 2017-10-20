@@ -38,6 +38,8 @@ class MootaPay extends PaymentModule
                 MOOTA_API_TIMEOUT => 30,
                 MOOTA_ENV => 'production',
                 MOOTA_USE_UQ_CODE => false,
+                MOOTA_UQ_PREFFIX => 0,
+                MOOTA_UQ_SUFFIX => 0,
             ]));
         }
 
@@ -66,7 +68,16 @@ class MootaPay extends PaymentModule
                 MOOTA_API_TIMEOUT => strval(
                     Tools::getValue( MOOTA_API_TIMEOUT )
                 ),
-                MOOTA_ENV => strval( Tools::getValue( MOOTA_ENV ) )
+                MOOTA_ENV => strval( Tools::getValue( MOOTA_ENV ) ),
+                MOOTA_USE_UQ_CODE => strval(
+                    Tools::getValue( MOOTA_USE_UQ_CODE )
+                ),
+                MOOTA_UQ_PREFFIX => strval(
+                    Tools::getValue( MOOTA_UQ_PREFFIX )
+                ),
+                MOOTA_UQ_SUFFIX => strval(
+                    Tools::getValue( MOOTA_UQ_SUFFIX )
+                ),
             ];
 
             Configuration::updateValue(
@@ -134,29 +145,6 @@ class MootaPay extends PaymentModule
                             'id' => MOOTA_ENV . '_testing',
                             'value' => 'testing',
                             'label' => 'Testing',
-                        )
-                    )
-                ),
-                array(
-                    'type' => 'radio',
-                    'label' => $this->l('Gunakan kode unik?'),
-                    'name' => MOOTA_USE_UQ_CODE,
-                    'size' => 20,
-                    'required' => true,
-                    
-                    // The content of the 'class' attribute of the <label> tag
-                    // for the <input> tag.
-                    'class'     => 'col-xs-2',
-                    'is_bool'   => true, 
-                    'values' => array(
-                        array(
-                            'id' => MOOTA_USE_UQ_CODE . '_yes',
-                            'value' => 1,
-                            'label' => 'Ya',
-                        ), array(
-                            'id' => MOOTA_USE_UQ_CODE . '_no',
-                            'value' => 0,
-                            'label' => 'Tidak',
                         )
                     )
                 ),
@@ -230,13 +218,16 @@ class MootaPay extends PaymentModule
 
         // Load current value
         $config = unserialize( Configuration::get( MOOTA_SETTINGS ) );
+
         $helper->fields_value = array(
             MOOTA_API_KEY => $config[ MOOTA_API_KEY ],
             MOOTA_API_TIMEOUT => $config[
                 MOOTA_API_TIMEOUT
             ],
             MOOTA_ENV => $config[ MOOTA_ENV ],
-            MOOTA_USE_UQ_CODE => $config[ MOOTA_USE_UQ_CODE ],
+            // MOOTA_USE_UQ_CODE => $config[ MOOTA_USE_UQ_CODE ],
+            // MOOTA_UQ_PREFFIX => $config[ MOOTA_UQ_PREFFIX ],
+            // MOOTA_UQ_SUFFIX => $config[ MOOTA_UQ_SUFFIX ],
             'PUSH_NOTIF_URL' => $baseUri . '/modules/mootapay/notification.php',
         );
 
