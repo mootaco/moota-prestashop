@@ -137,29 +137,29 @@ class MootaPay extends PaymentModule
                         )
                     )
                 ),
-                array(
-                    'type' => 'radio',
-                    'label' => $this->l('Gunakan kode unik?'),
-                    'name' => MOOTA_USE_UQ_CODE,
-                    'size' => 20,
-                    'required' => true,
+                // array(
+                //     'type' => 'radio',
+                //     'label' => $this->l('Gunakan kode unik?'),
+                //     'name' => MOOTA_USE_UQ_CODE,
+                //     'size' => 20,
+                //     'required' => true,
                     
-                    // The content of the 'class' attribute of the <label> tag
-                    // for the <input> tag.
-                    'class'     => 'col-xs-2',
-                    'is_bool'   => true, 
-                    'values' => array(
-                        array(
-                            'id' => MOOTA_USE_UQ_CODE . '_yes',
-                            'value' => 1,
-                            'label' => 'Ya',
-                        ), array(
-                            'id' => MOOTA_USE_UQ_CODE . '_no',
-                            'value' => 0,
-                            'label' => 'Tidak',
-                        )
-                    )
-                ),
+                //     // The content of the 'class' attribute of the <label> tag
+                //     // for the <input> tag.
+                //     'class'     => 'col-xs-2',
+                //     'is_bool'   => true, 
+                //     'values' => array(
+                //         array(
+                //             'id' => MOOTA_USE_UQ_CODE . '_yes',
+                //             'value' => 1,
+                //             'label' => 'Ya',
+                //         ), array(
+                //             'id' => MOOTA_USE_UQ_CODE . '_no',
+                //             'value' => 0,
+                //             'label' => 'Tidak',
+                //         )
+                //     )
+                // ),
                 array(
                     'type' => 'text',
                     'label' => $this->l(
@@ -236,7 +236,7 @@ class MootaPay extends PaymentModule
                 MOOTA_API_TIMEOUT
             ],
             MOOTA_ENV => $config[ MOOTA_ENV ],
-            MOOTA_USE_UQ_CODE => $config[ MOOTA_USE_UQ_CODE ],
+            // MOOTA_USE_UQ_CODE => $config[ MOOTA_USE_UQ_CODE ],
             'PUSH_NOTIF_URL' => $baseUri . '/modules/mootapay/notification.php',
         );
 
