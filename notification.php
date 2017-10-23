@@ -1,5 +1,7 @@
 <?php
 
+header('Content-Type: application/json');
+
 $rootDir = str_replace(
     'modules/mootapay', '', dirname($_SERVER['SCRIPT_FILENAME'])
 );
