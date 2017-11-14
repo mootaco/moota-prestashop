@@ -1,7 +1,5 @@
 <?php
 
-header('Content-Type: application/json');
-
 $rootDir = str_replace(
     'modules/mootapay', '', dirname($_SERVER['SCRIPT_FILENAME'])
 );
@@ -23,32 +21,12 @@ if (strtolower($_SERVER['REQUEST_METHOD']) !== 'post') {
     ));
 
     $handler = Moota\SDK\PushCallbackHandler::createDefault()
-        ->setTransactionFetcher(new Moota\Prestashop\OrderFetcher)
-        ->setPaymentMatcher(new Moota\Prestashop\OrderMatcher)
+        ->setOrderFetcher(new Moota\Prestashop\OrderFetcher)
+        ->setOrderMatcher(new Moota\Prestashop\OrderMatcher)
+        ->setOrderFullfiler(new Moota\Prestashop\OrderFulfiller)
     ;
 
-    $payments = $handler->handle();
-    $statusData = array(
-        'status' => 'not-ok', 'error' => 'No matching order found'
-    );
-
-    if ( count( $payments ) > 0 ) {
-        foreach ($payments as $payment) {
-            // Taken from prestashop core: `AdminOrdersController#postProcess`,
-            // inside `elseif (submitAddPayment)`,
-            // find for: `$order->addOrderPayment`
-            $payment['orderModel']->addOrderPayment(
-                $payment['amount'],
-                'mootapay',
-                $payment['transactionId'],
-                $payment['currency'],
-                date('Y-m-d H:i:s'),
-                null // order_invoice
-            );
-        }
-
-        $statusData = array('status' => 'ok', 'count' => count($payments));
-    }
+    $statusData = $handler->handle();
 
     header('Content-Type: application/json');
     echo json_encode( $statusData );

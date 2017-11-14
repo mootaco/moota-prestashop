@@ -1,8 +1,8 @@
 <?php namespace Moota\Prestashop;
 
-use Moota\SDK\Contracts\MatchPayments;
+use Moota\SDK\Contracts\Push\MatchesOrders;
 
-class OrderMatcher implements MatchPayments
+class OrderMatcher implements MatchesOrders
 {
     /**
      * Matches payments sent by Moota to available transactions in storage.

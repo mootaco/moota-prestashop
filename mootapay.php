@@ -10,7 +10,6 @@ class MootaPay extends PaymentModule
 {
     public function __construct()
     {
-        // all MOOTA_* constants is in the SDK
         $this->name = 'mootapay';
         $this->tab = 'payments_gateways';
         $this->version = '1.0.0';
@@ -140,11 +139,11 @@ class MootaPay extends PaymentModule
                         array(
                             'id' => MOOTA_ENV . '_production',
                             'value' => 'production',
-                            'label' => 'Production',
+                            'label' => 'Live',
                         ), array(
                             'id' => MOOTA_ENV . '_testing',
                             'value' => 'testing',
-                            'label' => 'Testing',
+                            'label' => 'Sandbox',
                         )
                     )
                 ),

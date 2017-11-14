@@ -1,8 +1,8 @@
 <?php namespace Moota\Prestashop;
 
-use Moota\SDK\Contracts\FetchesTransactions;
+use Moota\SDK\Contracts\Push\FetchesOrders;
 
-class OrderFetcher implements FetchesTransactions
+class OrderFetcher implements FetchesOrders
 {
     const AWAITING_CHECK_PAYMENT = 1;
     const AWAITING_BANK_WIRE_PAYMENT = 10;
@@ -30,7 +30,7 @@ class OrderFetcher implements FetchesTransactions
             ->where('`current_state` IN ('
                 . implode(',', $this->unfinishedStates)
             . ')')
-            ->where('`total_paid_real` < 1')
+            ->where('`total_paid_real` < `total_paid`')
         ;
 
         if (!empty($inflowAmounts)) {
