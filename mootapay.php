@@ -8,6 +8,8 @@ require_once __DIR__ . '/library/moota/moota-sdk/constants.php';
 
 class MootaPay extends PaymentModule
 {
+    protected $hooks = array('displayCheckoutSubtotalDetails');
+
     public function __construct()
     {
         $this->name = 'mootapay';
@@ -42,9 +44,14 @@ class MootaPay extends PaymentModule
             ]));
         }
 
-        parent::install();
 
-        return true;
+        $installed = parent::install();
+
+        foreach ($this->hooks as $hookName) {
+            $installed = $installed && $this->registerHook($hookName);
+        }
+
+        return $installed;
     }
 
     public function uninstall()
@@ -231,5 +238,10 @@ class MootaPay extends PaymentModule
         );
 
         return $helper->generateForm($fields_form);
+    }
+
+    public function hookDisplayCheckoutSubtotalDetails()
+    {
+        return false;
     }
 }
