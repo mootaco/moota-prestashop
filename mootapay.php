@@ -5,8 +5,7 @@ if (!defined('_PS_VERSION_')) {
 }
 
 require_once __DIR__ . '/library/moota/moota-sdk/constants.php';
-
-const MOOTA_UQ_LABEL = 'uqCodeLabel';
+require_once __DIR__ . '/constants.php';
 
 class MootaPay extends PaymentModule
 {
@@ -41,6 +40,7 @@ class MootaPay extends PaymentModule
                 MOOTA_API_KEY => null,
                 MOOTA_API_TIMEOUT => 30,
                 MOOTA_COMPLETED_STATUS => null,
+                MOOTA_COMPLETE_SENDMAIL => false,
                 MOOTA_OLDEST_ORDER => 7,
                 MOOTA_UQ_LABEL => 'Moota - Kode Unik',
                 MOOTA_USE_UQ_CODE => true,
@@ -82,6 +82,9 @@ class MootaPay extends PaymentModule
                 MOOTA_API_TIMEOUT => (int) Tools::getValue(MOOTA_API_TIMEOUT),
                 MOOTA_COMPLETED_STATUS => strval(
                     Tools::getValue(MOOTA_COMPLETED_STATUS)
+                ),
+                MOOTA_COMPLETE_SENDMAIL => (bool) Tools::getValue(
+                    MOOTA_COMPLETE_SENDMAIL
                 ),
                 MOOTA_OLDEST_ORDER => strval(
                     Tools::getValue(MOOTA_OLDEST_ORDER)
@@ -263,6 +266,30 @@ class MootaPay extends PaymentModule
                     ),
                 ),
 
+                // MOOTA_USE_UQ_CODE
+                array(
+                    'type' => 'radio',
+                    'label' => 'Kirim notifikasi ke customer?',
+                    'desc' => $this->l(
+                        'Kirim email notifikasi pembayaran diterima'
+                    ),
+                    'name' => MOOTA_COMPLETE_SENDMAIL,
+                    'class' => 'col-xs-1',
+                    'values' => array(
+                        array(
+                            'id' => MOOTA_COMPLETE_SENDMAIL . '_on',
+                            'value' => 1,
+                            'label' => 'Iya',
+                        ),
+                        array(
+                            'id' => MOOTA_COMPLETE_SENDMAIL . '_off',
+                            'value' => 0,
+                            'label' => 'Tidak',
+                        ),
+                    ),
+                    'required' => true,
+                ),
+
                 // MOOTA_OLDEST_ORDER
                 array(
                     'type' => 'text',
@@ -400,10 +427,5 @@ class MootaPay extends PaymentModule
         $helper->fields_value = $config;
 
         return $helper->generateForm($fields_form);
-    }
-
-    public function hookDisplayCheckoutSubtotalDetails()
-    {
-        return false;
     }
 }

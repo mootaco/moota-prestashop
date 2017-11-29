@@ -1,11 +1,8 @@
 <?php
 
-// This file will be copied to <PS_ROOT>/<OVERRIDE_PATH>
-// so this require path only makes sense over there
-require_once __DIR__
-    . '/../../../modules/mootapay/library/moota/moota-sdk/constants.php';
+require_once _PS_MODULE_DIR_ . '/mootapay/presta/MootaCartUtil.php';
 
-use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
+use PrestaShop\PrestaShop\Adapter\Cart\CartPresenter;
 
 class CartController extends \CartControllerCore
 {
@@ -16,43 +13,44 @@ class CartController extends \CartControllerCore
         $smarty = $this->context->smarty;
         $cart = $smarty->getTemplateVars('cart');
 
-        $shouldAddUqCode = count($cart['products']) > 0;
-
-        if ($shouldAddUqCode) {
-            $shouldAddUqCode = $shouldAddUqCode && isset($cart['totals']);
-        }
-
-        if ($shouldAddUqCode) {
-            $shouldAddUqCode = $shouldAddUqCode && isset(
-                $cart['totals']['total']
-            );
-        }
-
-        if ($shouldAddUqCode) {
-            $shouldAddUqCode = $shouldAddUqCode && isset(
-                $cart['totals']['total']['amount']
-            ) && $cart['totals']['total']['amount'] > 0;
-        }
-
-        $config = unserialize( \Configuration::get( MOOTA_SETTINGS ) );
-        if ( $shouldAddUqCode && $config[ MOOTA_USE_UQ_CODE ] ) {
-            $uniqueCode = mt_rand(
-                $config[ MOOTA_UQ_MIN ],
-                $config[ MOOTA_UQ_MAX ]
-            );
-
-            $cart['subtotals']['moota_uq'] = array(
-                'type' => 'payment',
-                'label' => $config['uqCodeLabel'],
-                'amount' => $uniqueCode,
-                'value' => (new PriceFormatter)->format($uniqueCode),
-            );
-        } else {
-            if (isset($cart['subtotals']['moota_uq'])) {
-                unset($cart['subtotals']['moota_uq']);
-            }
-        }
+        MootaCartUtil::addUniqueCode($cart);
 
         $smarty->assign(['cart' => $cart]);
+    }
+
+    public function displayAjaxUpdate()
+    {
+        if (Configuration::isCatalogMode()) {
+            return;
+        }
+
+        $productsInCart = $this->context->cart->getProducts();
+        $updatedProducts = array_filter($productsInCart, array(
+            $this, 'productInCartMatchesCriteria'
+        ));
+
+        list(, $updatedProduct) = each($updatedProducts);
+
+        $productQuantity = $updatedProduct['quantity'];
+
+        if (!$this->errors) {
+            $cart = (new CartPresenter)->present($this->context->cart);
+
+            MootaCartUtil::addUniqueCode($cart);
+
+            $this->ajaxDie(json_encode([
+                'success' => true,
+                'id_product' => $this->id_product,
+                'id_product_attribute' => $this->id_product_attribute,
+                'quantity' => $productQuantity,
+                'cart' => $cart,
+            ]));
+        } else {
+            $this->ajaxDie(json_encode([
+                'hasError' => true,
+                'errors' => $this->errors,
+                'quantity' => $productQuantity,
+            ]));
+        }
     }
 }

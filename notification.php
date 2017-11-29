@@ -23,11 +23,16 @@ if (strtolower($_SERVER['REQUEST_METHOD']) !== 'post') {
     $handler = Moota\SDK\PushCallbackHandler::createDefault()
         ->setOrderFetcher(new Moota\Prestashop\OrderFetcher)
         ->setOrderMatcher(new Moota\Prestashop\OrderMatcher)
-        ->setOrderFullfiler(new Moota\Prestashop\OrderFulfiller)
+        ->setOrderFulfiller(new Moota\Prestashop\OrderFulfiller)
     ;
 
     $statusData = $handler->handle();
+    $responseCode = Moota\SDK\PushCallbackHandler::statusDataToHttpCode(
+        $statusData
+    );
 
     header('Content-Type: application/json');
-    echo json_encode( $statusData );
+    http_response_code($responseCode);
+
+    echo json_encode($statusData);
 }
