@@ -1,8 +1,6 @@
 <?php
 
-require_once _PS_MODULE_DIR_ . '/mootapay/presta/MootaCartUtil.php';
-
-use PrestaShop\PrestaShop\Adapter\Cart\CartPresenter;
+require_once _PS_MODULE_DIR_ . '/mootapay/presta/MootaOverrideUtil.php';
 
 class Ps_ShoppingcartOverride extends \Ps_Shoppingcart
 {
@@ -10,38 +8,18 @@ class Ps_ShoppingcartOverride extends \Ps_Shoppingcart
     {
         $wxVars = parent::getWidgetVariables($hookName, $params);
 
-        MootaCartUtil::addUniqueCode($wxVars['cart']);
+        MootaOverrideUtil::addUniqueCode($wxVars['cart']);
 
         return $wxVars;
     }
 
     public function renderModal(Cart $cart, $id_product, $id_product_attribute)
     {
-        $cartData = (new CartPresenter)->present($cart);
-        $product = null;
+        parent::renderModal($cart, $id_product, $id_product_attribute);
 
-        foreach ($cartData['products'] as $p) {
-            if ($p['id_product'] == $id_product && $p['id_product_attribute'] == $id_product_attribute) {
-                $product = $p;
-                break;
-            }
-        }
-
-        MootaCartUtil::addUniqueCode($cartData);
-
-        $this->smarty->assign(array(
-            'product' => $product,
-            'cart' => $cartData,
-            'cart_url' => $this->context->link->getPageLink(
-                'cart',
-                null,
-                $this->context->language->id,
-                array('action' => 'show'),
-                false,
-                null,
-                true
-            ),
-        ));
+        MootaOverrideUtil::controllerSmartyUniqueCode(
+            $this->context->smarty, 'cart'
+        );
 
         return $this->fetch('module:ps_shoppingcart/modal.tpl');
     }

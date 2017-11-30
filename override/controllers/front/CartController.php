@@ -1,6 +1,6 @@
 <?php
 
-require_once _PS_MODULE_DIR_ . '/mootapay/presta/MootaCartUtil.php';
+require_once _PS_MODULE_DIR_ . '/mootapay/presta/MootaOverrideUtil.php';
 
 use PrestaShop\PrestaShop\Adapter\Cart\CartPresenter;
 
@@ -10,17 +10,14 @@ class CartController extends \CartControllerCore
     {
         parent::initContent();
 
-        $smarty = $this->context->smarty;
-        $cart = $smarty->getTemplateVars('cart');
-
-        MootaCartUtil::addUniqueCode($cart);
-
-        $smarty->assign(['cart' => $cart]);
+        MootaOverrideUtil::controllerSmartyUniqueCode(
+            $this->context->smarty, 'cart'
+        );
     }
 
     public function displayAjaxUpdate()
     {
-        if (Configuration::isCatalogMode()) {
+        if (\Configuration::isCatalogMode()) {
             return;
         }
 
@@ -36,7 +33,7 @@ class CartController extends \CartControllerCore
         if (!$this->errors) {
             $cart = (new CartPresenter)->present($this->context->cart);
 
-            MootaCartUtil::addUniqueCode($cart);
+            MootaOverrideUtil::addUniqueCode($cart);
 
             $this->ajaxDie(json_encode([
                 'success' => true,

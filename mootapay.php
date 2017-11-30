@@ -4,8 +4,10 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-require_once __DIR__ . '/library/moota/moota-sdk/constants.php';
-require_once __DIR__ . '/constants.php';
+$mootaDir = _PS_MODULE_DIR_ . '/mootapay';
+
+require_once "{$mootaDir}/library/moota/moota-sdk/constants.php";
+require_once "{$mootaDir}/constants.php";
 
 class MootaPay extends PaymentModule
 {
@@ -80,14 +82,14 @@ class MootaPay extends PaymentModule
                     Tools::getValue(MOOTA_API_KEY)
                 ),
                 MOOTA_API_TIMEOUT => (int) Tools::getValue(MOOTA_API_TIMEOUT),
-                MOOTA_COMPLETED_STATUS => strval(
-                    Tools::getValue(MOOTA_COMPLETED_STATUS)
+                MOOTA_COMPLETED_STATUS => (int) Tools::getValue(
+                    MOOTA_COMPLETED_STATUS
                 ),
                 MOOTA_COMPLETE_SENDMAIL => (bool) Tools::getValue(
                     MOOTA_COMPLETE_SENDMAIL
                 ),
-                MOOTA_OLDEST_ORDER => strval(
-                    Tools::getValue(MOOTA_OLDEST_ORDER)
+                MOOTA_OLDEST_ORDER => (int) Tools::getValue(
+                    MOOTA_OLDEST_ORDER
                 ),
                 MOOTA_UQ_LABEL => strval(
                     Tools::getValue(MOOTA_UQ_LABEL)
@@ -108,7 +110,7 @@ class MootaPay extends PaymentModule
                 $configValues[ MOOTA_UQ_MIN ] = 1;
             }
 
-            Configuration::updateValue(
+            \Configuration::updateValue(
                 MOOTA_SETTINGS, serialize($configValues)
             );
 

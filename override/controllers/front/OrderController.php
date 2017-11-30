@@ -1,6 +1,6 @@
 <?php
 
-require_once _PS_MODULE_DIR_ . '/mootapay/presta/MootaCartUtil.php';
+require_once _PS_MODULE_DIR_ . '/mootapay/presta/MootaOverrideUtil.php';
 
 class OrderController extends \OrderControllerCore
 {
@@ -8,11 +8,8 @@ class OrderController extends \OrderControllerCore
     {
         parent::initContent();
 
-        $smarty = $this->context->smarty;
-        $cart = $smarty->getTemplateVars('cart');
-
-        MootaCartUtil::addUniqueCode($cart);
-
-        $smarty->assign(['cart' => $cart]);
+        MootaOverrideUtil::controllerSmartyUniqueCode(
+            $this->context->smarty, 'cart'
+        );
     }
 }
