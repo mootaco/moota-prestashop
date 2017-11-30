@@ -11,6 +11,16 @@ require_once "{$mootaDir}/constants.php";
 
 class MootaPay extends PaymentModule
 {
+    protected $overridenFiles = array(
+        'classes/Cart.php',
+        'controllers/front/CartController.php',
+        'controllers/front/GuestTrackingController.php',
+        'controllers/front/HistoryController.php',
+        'controllers/front/OrderConfirmationController.php',
+        'controllers/front/OrderController.php',
+        'controllers/front/OrderDetailController.php',
+        'modules/ps_shoppingcart/ps_shoppingcart.php',
+    );
     protected $hooks = array();
 
     public function __construct()
@@ -65,6 +75,7 @@ class MootaPay extends PaymentModule
 
     public function uninstall()
     {
+        $this->plsManuallyDeleteClassIndexLikeItsTheNineties();
         Configuration::deleteByName(MOOTA_SETTINGS);
         parent::uninstall();
 
@@ -429,5 +440,34 @@ class MootaPay extends PaymentModule
         $helper->fields_value = $config;
 
         return $helper->generateForm($fields_form);
+    }
+
+    public function enable($force_all = false)
+    {
+        $this->plsManuallyDeleteClassIndexLikeItsTheNineties();
+
+        return parent::enable($force_all);
+    }
+
+    public function disable($force_all = false)
+    {
+        $this->plsManuallyDeleteClassIndexLikeItsTheNineties();
+
+        return parent::disable($force_all);
+    }
+
+    /**
+     * Safety measure against Prestashop's default behavior when
+     * reenabling a module, which is to whine and moan because some automatically
+     * generated Class Names is missing from god knows where.... :'(
+     */
+    protected function plsManuallyDeleteClassIndexLikeItsTheNineties()
+    {
+        @unlink(_PS_ROOT_DIR_ . '/app/cache/dev/class_index.php');
+        @unlink(_PS_ROOT_DIR_ . '/app/cache/prod/class_index.php');
+
+        foreach ($this->overridenFiles as $file) {
+            @unlink(_PS_ROOT_DIR_ . '/override/' . $file);
+        }
     }
 }
