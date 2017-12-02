@@ -44,22 +44,48 @@ class MootaPay extends PaymentModule
         );
     }
 
+    protected function getDefaultConfig() {
+        return array(
+            MOOTA_ENV => 'production',
+            MOOTA_API_KEY => null,
+            MOOTA_API_TIMEOUT => 30,
+            MOOTA_COMPLETED_STATUS => null,
+            MOOTA_COMPLETE_SENDMAIL => false,
+            MOOTA_OLDEST_ORDER => 7,
+            MOOTA_UQ_LABEL => 'Moota - Kode Unik',
+            MOOTA_USE_UQ_CODE => true,
+            MOOTA_UQ_MIN => 1,
+            MOOTA_UQ_MAX => 999,
+        );
+    }
+
+    protected function logDebug($data) {
+        @file_put_contents(
+            '/Volumes/WData/Projects/web/www/prestashop/debug.log',
+            json_encode($data, JSON_PRETTY_PRINT) . PHP_EOL,
+            FILE_APPEND
+        );
+    }
+
+    protected function initConfig() {
+        // config in db is a `serialize()`-d string
+        $config = Configuration::get(MOOTA_SETTINGS);
+
+        // `unserialize()`-d into array, if not empty
+        $config = empty($config) ? array() : unserialize($config);
+
+        // merge old config in db, with current default
+        // in case there is new key-value pair(s)
+        // this will not overwrite old config
+        $config = array_merge($config, $this->getDefaultConfig());
+
+        // store it to db
+        Configuration::updateValue(MOOTA_SETTINGS, serialize($config));
+    }
+
     public function install()
     {
-        if ( ! Configuration::get( MOOTA_SETTINGS ) ) {
-            Configuration::updateValue(MOOTA_SETTINGS, serialize([
-                MOOTA_ENV => 'production',
-                MOOTA_API_KEY => null,
-                MOOTA_API_TIMEOUT => 30,
-                MOOTA_COMPLETED_STATUS => null,
-                MOOTA_COMPLETE_SENDMAIL => false,
-                MOOTA_OLDEST_ORDER => 7,
-                MOOTA_UQ_LABEL => 'Moota - Kode Unik',
-                MOOTA_USE_UQ_CODE => true,
-                MOOTA_UQ_MIN => 1,
-                MOOTA_UQ_MAX => 999,
-            ]));
-        }
+        $this->initConfig();
 
         $installed = parent::install();
 
@@ -75,7 +101,7 @@ class MootaPay extends PaymentModule
 
     public function uninstall()
     {
-        $this->plsManuallyDeleteClassIndexLikeItsTheNineties();
+        $this->plsManuallyDeleteStuffLikeItsTheNineties();
         Configuration::deleteByName(MOOTA_SETTINGS);
         parent::uninstall();
 
@@ -444,24 +470,30 @@ class MootaPay extends PaymentModule
 
     public function enable($force_all = false)
     {
-        $this->plsManuallyDeleteClassIndexLikeItsTheNineties();
+        $this->initConfig();
+        $this->plsManuallyDeleteStuffLikeItsTheNineties();
 
         return parent::enable($force_all);
     }
 
     public function disable($force_all = false)
     {
-        $this->plsManuallyDeleteClassIndexLikeItsTheNineties();
+        $this->plsManuallyDeleteStuffLikeItsTheNineties();
 
         return parent::disable($force_all);
     }
 
     /**
+     * Call this before calling parent class action Module#<ACTION>,
+     * where action is one of the following:
+     * `install`, `uninstall`, `enable`, `disable`
+     *
      * Safety measure against Prestashop's default behavior when
-     * reenabling a module, which is to whine and moan because some automatically
-     * generated Class Names is missing from god knows where.... :'(
+     * reenabling a module, which is to whine and moan because some
+     * automatically generated Class Names is missing from god knows where....
+     * :'(
      */
-    protected function plsManuallyDeleteClassIndexLikeItsTheNineties()
+    protected function plsManuallyDeleteStuffLikeItsTheNineties()
     {
         @unlink(_PS_ROOT_DIR_ . '/app/cache/dev/class_index.php');
         @unlink(_PS_ROOT_DIR_ . '/app/cache/prod/class_index.php');

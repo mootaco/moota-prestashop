@@ -1,10 +1,6 @@
 <?php
 
-$rootDir = str_replace(
-    'modules/mootapay', '', dirname($_SERVER['SCRIPT_FILENAME'])
-);
-
-require_once $rootDir . '/config/config.inc.php';
+require_once _PS_ROOT_DIR_ . '/config/config.inc.php';
 require_once __DIR__ . '/library/autoload.php';
 require_once __DIR__ . '/mootapay.php';
 
