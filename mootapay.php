@@ -4,10 +4,9 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-$mootaDir = _PS_MODULE_DIR_ . '/mootapay';
-
-require_once "{$mootaDir}/library/moota/moota-sdk/constants.php";
-require_once "{$mootaDir}/constants.php";
+require_once _PS_MODULE_DIR_
+    . '/mootapay/library/moota/moota-sdk/constants.php';
+require_once _PS_MODULE_DIR_ . '/mootapay/constants.php';
 
 class MootaPay extends PaymentModule
 {
@@ -21,7 +20,10 @@ class MootaPay extends PaymentModule
         'controllers/front/OrderDetailController.php',
         'modules/ps_shoppingcart/ps_shoppingcart.php',
     );
+
     protected $hooks = array();
+
+    protected $defaultLang;
 
     public function __construct()
     {
@@ -42,6 +44,9 @@ class MootaPay extends PaymentModule
         $this->confirmUninstall = $this->l(
             'Are you sure you want to uninstall?'
         );
+
+        // Get default language
+        $this->defaultLang = (int) Configuration::get('PS_LANG_DEFAULT');
     }
 
     protected function getDefaultConfig() {
@@ -185,6 +190,7 @@ class MootaPay extends PaymentModule
             ->where('`id_order_state` IN ('. implode(
                 ', ', $osIds
             ) .')')
+            ->where("`id_lang` = {$this->defaultLang}")
         ;
 
         foreach (\Db::getInstance()->executeS($query) as $row) {
@@ -211,9 +217,6 @@ class MootaPay extends PaymentModule
             $orderStates,
             $this->getOrderStates('id', 'name')
         );
-
-        // Get default language
-        $default_lang = (int) Configuration::get('PS_LANG_DEFAULT');
 
         // Init Fields form array
         $fields_form[0]['form'] = array(
@@ -418,8 +421,8 @@ class MootaPay extends PaymentModule
             . '&configure=' . $this->name;
 
         // Language
-        $helper->default_form_language = $default_lang;
-        $helper->allow_employee_form_lang = $default_lang;
+        $helper->default_form_language = $this->defaultLang;
+        $helper->allow_employee_form_lang = $this->defaultLang;
          
         // Title and toolbar
         $helper->title = $this->displayName;
@@ -460,8 +463,18 @@ class MootaPay extends PaymentModule
 
         // Load current value
         $config = unserialize( Configuration::get( MOOTA_SETTINGS ) );
-        $config['PUSH_NOTIF_URL'] =
-            "{$baseUri}/modules/mootapay/notification.php";
+
+        $protocol = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '');
+
+        $useFriendly = Configuration::get('PS_REWRITING_SETTINGS');
+
+        if ($useFriendly) {
+            $config['PUSH_NOTIF_URL'] = "{$protocol}://{$baseUri}"
+                . '/module/mootapay/push';
+        } else {
+            $config['PUSH_NOTIF_URL'] = "{$protocol}://{$baseUri}"
+                . '/index.php?fc=module&module=mootapay&controller=push';
+        }
 
         $helper->fields_value = $config;
 

@@ -23,6 +23,9 @@
         "moota/moota-sdk": "1.1.*"
     },
     "autoload": {
+        "files": [
+            "constants.php"
+        ],
         "psr-4": {
             "Moota\\Prestashop\\": "presta"
         }

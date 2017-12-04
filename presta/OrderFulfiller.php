@@ -26,32 +26,26 @@ class OrderFulfiller implements FulfillsOrder
 
         $paymentAdded = $paymentAdded !== null || $paymentAdded === true;
 
-        if ($paymentAdded && empty($orderStateId)) {
+        if ($paymentAdded && !empty($orderStateId)) {
             $history = new \OrderHistory();
             $history->id_order = $orderId;
             $history->id_employee = 0;
 
-            $history->changeIdOrderState($orderStateId, $orderModel);
-
-            $res = \Db::getInstance()->getRow("
-                SELECT `invoice_number`, `invoice_date`
-                  , `delivery_number` , `delivery_date`
-                FROM `". _DB_PREFIX_ ."orders`
-                WHERE `id_order` = {$orderId}
-            ");
-
-            $orderModel->invoice_date = $res['invoice_date'];
-            $orderModel->invoice_number = $res['invoice_number'];
-            $orderModel->delivery_date = $res['delivery_date'];
-            $orderModel->delivery_number = $res['delivery_number'];
+            $orderModel->current_state = $orderStateId;
             $orderModel->update();
 
+            $useExistingPayment = !$orderModel->hasInvoice() ? true : false;
+
+            $history->changeIdOrderState(
+                $orderStateId,
+                $orderModel,
+                $useExistingPayment
+            );
+
             // MOOTA_COMPLETE_SENDMAIL
-            if ( $config[ MOOTA_COMPLETE_SENDMAIL ] ) {
-                $history->addWithEmail();
-            } else {
-                $history->add();
-            }
+            $addMethod = $config[ MOOTA_COMPLETE_SENDMAIL ]
+                ? 'addWithEmail' : 'add';
+            $history->{ $addMethod }();
 
             (new \Moota\SDK\Api)->linkOrderWithMoota(
                 $order['mootaId'], $order['orderId']

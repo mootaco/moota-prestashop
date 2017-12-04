@@ -20,6 +20,7 @@ if (strtolower($_SERVER['REQUEST_METHOD']) !== 'post') {
         ->setOrderFetcher(new Moota\Prestashop\OrderFetcher)
         ->setOrderMatcher(new Moota\Prestashop\OrderMatcher)
         ->setOrderFulfiller(new Moota\Prestashop\OrderFulfiller)
+        ->setDupeFinder(new Moota\Prestashop\DuplicateFinder)
     ;
 
     $statusData = $handler->handle();

@@ -30,7 +30,6 @@ class OrderMatcher implements MatchesOrders
 
         if ( ! empty($orders) && count($orders) > 0 ) {
             // match whmcs invoice with moota transactions
-            // TODO: apply unique code transformation over here
             foreach ($orders as $order) {
                 $transAmount = (int) $order->total_paid;
                 $tmpPayment = null;
