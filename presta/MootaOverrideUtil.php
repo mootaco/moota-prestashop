@@ -34,6 +34,10 @@ class MootaOverrideUtil
 
                 $cookie->{ MOOTA_UQ } = $uniqueCode;
             }
+
+            if ($config[ MOOTA_TYPE_UQ_CODE ] == 'decrement') {
+                $uniqueCode = $uniqueCode * -1;
+            }
         }
 
         return $uniqueCode;

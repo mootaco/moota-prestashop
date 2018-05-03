@@ -59,16 +59,9 @@ class MootaPay extends PaymentModule
             MOOTA_OLDEST_ORDER => 7,
             MOOTA_UQ_LABEL => 'Moota - Kode Unik',
             MOOTA_USE_UQ_CODE => true,
+            MOOTA_TYPE_UQ_CODE => 'moota_type_uq',
             MOOTA_UQ_MIN => 1,
             MOOTA_UQ_MAX => 999,
-        );
-    }
-
-    protected function logDebug($data) {
-        @file_put_contents(
-            '/Volumes/WData/Projects/web/www/prestashop/debug.log',
-            json_encode($data, JSON_PRETTY_PRINT) . PHP_EOL,
-            FILE_APPEND
         );
     }
 
@@ -137,6 +130,9 @@ class MootaPay extends PaymentModule
                     Tools::getValue(MOOTA_UQ_LABEL)
                 ),
                 MOOTA_USE_UQ_CODE => (bool) Tools::getValue(MOOTA_USE_UQ_CODE),
+                MOOTA_TYPE_UQ_CODE => strval(
+                    Tools::getValue(MOOTA_TYPE_UQ_CODE)
+                ),
                 MOOTA_UQ_MIN => (int) Tools::getValue(MOOTA_UQ_MIN),
                 MOOTA_UQ_MAX => (int) Tools::getValue(MOOTA_UQ_MAX),
             ];
@@ -367,6 +363,28 @@ class MootaPay extends PaymentModule
                     'required' => true,
                 ),
 
+                // MOOTA_TYPE_UQ_CODE
+                array(
+                    'type' => 'radio',
+                    'label' => 'Tipe kode unik?',
+                    'desc' => $this->l(''),
+                    'name' => MOOTA_TYPE_UQ_CODE,
+                    'class' => 'col-xs-2',
+                    'values' => array(
+                        array(
+                            'id' => MOOTA_TYPE_UQ_CODE . '_decrement',
+                            'value' => 'decrement',
+                            'label' => 'Pengurangan',
+                        ),
+                        array(
+                            'id' => MOOTA_TYPE_UQ_CODE . '_increment',
+                            'value' => 'increment',
+                            'label' => 'Penambahan',
+                        ),
+                    ),
+                    'required' => true,
+                ),
+
                 // MOOTA_UQ_LABEL
                 array(
                     'type' => 'text',
@@ -390,7 +408,6 @@ class MootaPay extends PaymentModule
                     'name' => MOOTA_UQ_MIN,
                     'size' => 20,
                     'required' => true,
-                    'maxchar' => 3,
                 ),
 
                 // MOOTA_UQ_MAX
